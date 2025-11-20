@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -31,6 +32,9 @@ public class OrderController {
                 || order.getSku() == null || order.getSku().getId() == null) {
             return Result.fail("关联信息不完整（用户/店铺/商品/SKU ID不能为空）");
         }
+        Optional<ProductSku> productSku=productSkuRepository.findById(order.getSku().getId());
+        productSku.get().setStock(productSku.get().getStock()-order.getQuantity());
+        productSkuRepository.save(productSku.get());
         Order savedOrder = orderRepository.save(order);
         return Result.suc("订单创建成功", savedOrder);
     }
@@ -44,14 +48,25 @@ public class OrderController {
         List<Order> orders = orderRepository.findByShopId(shopId);
         return Result.suc(orders, orders.size());
     }
-    @DeleteMapping("delete/{id}")
+    @PostMapping("/cancel/{id}")
+    public Result cancelOrder(@PathVariable UUID id) {
+        Order order = orderRepository.findById(id).orElse(null);
+        if (order == null) {
+            return Result.fail("订单不存在");
+        }
+        order.setStatus(4); // 设置为已取消状态
+        Optional<ProductSku> productSku=productSkuRepository.findById(order.getSku().getId());
+        productSku.get().setStock(productSku.get().getStock()+order.getQuantity());
+        productSkuRepository.save(productSku.get());
+        return Result.suc("退单成功");
+    }
+    @DeleteMapping("/delete/{id}")
     public Result deleteOrder(@PathVariable UUID id) {
         if (orderRepository.existsById(id)) {
             orderRepository.deleteById(id);
             return Result.suc("订单删除成功");
-        } else {
-            return Result.fail("订单不存在");
         }
+        return Result.fail("订单不存在");
     }
     @PostMapping("/update")
     public Result updateOrder(@RequestBody Order orderUpdate) {
