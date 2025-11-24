@@ -5,6 +5,7 @@ import com.a.shopping.entity.User;
 import com.a.shopping.entity.UserAddress;
 import com.a.shopping.entity.UserDTO;
 import com.a.shopping.repository.UserRepository;
+import com.a.shopping.service.LoginService;
 import com.a.shopping.service.RegisterService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,8 @@ public class UserController {
     private UserRepository userRepository;
     @Autowired
     private RegisterService registerService;
+    @Autowired
+    private LoginService loginService;
     @PostMapping("/register")
     public Result addUser(@RequestPart("avatar") MultipartFile avatar,
                           @RequestPart("user") UserDTO dto) throws IOException {
@@ -38,6 +41,11 @@ public class UserController {
             return   Result.fail("只能上传图片");
         }
         return registerService.register(dto, avatar);
+    }
+    @PostMapping("/login")
+    public Result login(@RequestBody UserDTO loginDto) {
+
+        return loginService.login(loginDto);
     }
     @GetMapping("/list/{id}")
     public Result list(@PathVariable Long id){
