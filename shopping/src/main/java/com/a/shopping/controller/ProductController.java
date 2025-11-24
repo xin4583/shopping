@@ -1,5 +1,6 @@
 package com.a.shopping.controller;
 
+import com.a.shopping.configure.QueryPageParam;
 import com.a.shopping.entity.Product;
 import com.a.shopping.entity.ProductDTO;
 import com.a.shopping.entity.Result;
@@ -7,6 +8,10 @@ import com.a.shopping.repository.ProductCategoryRepository;
 import com.a.shopping.repository.ProductRepository;
 import com.a.shopping.repository.ShopRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -66,7 +71,29 @@ public class ProductController {
         return Result.suc();
     }
     @GetMapping("/list")
-    public Result list() {
-        return Result.suc(productRepository.findAll());
+    public Page<Product> listPage(@RequestBody QueryPageParam queryPageParam) {
+        Pageable pageable = PageRequest.of(
+                queryPageParam.getPageNum() - 1,
+                queryPageParam.getPageSize(),
+                Sort.Direction.ASC, "id"
+        );
+        Page<Product> productPage = productRepository.findAll(pageable);
+        return productPage;
+    }
+    @GetMapping("/ListPage")
+    public Page<Product> searchPage(@RequestBody QueryPageParam queryPageParam) {
+        // 从param中获取搜索关键词，拼接模糊查询符 %
+        String fuzzyName = "%" + queryPageParam.getParam().get("name") + "%";
+
+        // 构建分页参数（与上面一致：页码转换、每页大小、按id升序）
+        Pageable pageable = PageRequest.of(
+                queryPageParam.getPageNum() - 1,
+                queryPageParam.getPageSize(),
+                Sort.Direction.ASC, "id"
+        );
+
+        // 执行模糊搜索分页查询（注意：JPA方法参数顺序要与Repository定义一致）
+        Page<Product> productPage = productRepository.findByNameLike(pageable, fuzzyName);
+        return productPage;
     }
 }
