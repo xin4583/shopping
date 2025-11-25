@@ -35,8 +35,8 @@ public class OrderController {
         Optional<ProductSku> productSku=productSkuRepository.findById(order.getSku().getId());
         productSku.get().setStock(productSku.get().getStock()-order.getQuantity());
         productSkuRepository.save(productSku.get());
-        Order savedOrder = orderRepository.save(order);
-        return Result.suc("订单创建成功", savedOrder);
+        orderRepository.save(order);
+        return Result.suc("订单创建成功");
     }
     @GetMapping("/list/{userId}")
     public Result getOrdersByUserId(@PathVariable Long userId) {
