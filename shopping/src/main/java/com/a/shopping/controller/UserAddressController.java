@@ -34,7 +34,7 @@ public class UserAddressController {
         addr.setCity(userAddress.getCity());
         addr.setDetailAddress(userAddress.getDetailAddress());
         addr.setIsDefault(userAddress.getIsDefault());
-        // UserAddress address=userAddressRepository.save(userAddress);
+        userAddressRepository.save(userAddress);
         return Result.suc();
     }
     @DeleteMapping ("/delete/{id}")
