@@ -1,12 +1,12 @@
 package com.a.shopping.controller;
 
-import com.a.shopping.entity.Order;
-import com.a.shopping.entity.ProductSku;
-import com.a.shopping.entity.Result;
+import com.a.shopping.entity.*;
 import com.a.shopping.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,12 +38,39 @@ public class OrderController {
         orderRepository.save(order);
         return Result.suc("订单创建成功");
     }
-    @GetMapping("/list/{userId}")
+    @GetMapping("/list1/{userId}")
     public Result getOrdersByUserId(@PathVariable Long userId) {
         List<Order> orders = orderRepository.findByUserId(userId);
-        return Result.suc(orders);
+        List<OrderDTO> orderDTOs = new ArrayList<>(orders.size());
+        for (Order order : orders) {
+            OrderDTO dto = new OrderDTO();
+            dto.setId(order.getId());
+            dto.setUserId(order.getUser().getId());
+            dto.setShopId(order.getUser().getId());
+            dto.setProductId(order.getProduct().getId());
+            dto.setSkuId(order.getSku().getId());
+            dto.setPrice(order.getPrice());
+            dto.setQuantity(order.getQuantity());
+            dto.setTotalAmount(order.getTotalAmount());
+            dto.setPayAmount(order.getPayAmount());
+            dto.setStatus(order.getStatus());
+            dto.setCreateTime(order.getCreateTime());
+            dto.setPayTime(order.getPayTime());
+            dto.setDeliverTime(order.getDeliverTime());
+            dto.setReceiveTime(order.getReceiveTime());
+            Product product = productRepository.findProductWithFirstImage(order.getProduct().getId());
+            if (product != null) {
+                dto.setProductName(product.getName());
+                if (!CollectionUtils.isEmpty(product.getImages())) {
+                    ProductImage firstImage = product.getImages().get(0);
+                    dto.setProductImage(firstImage.getImage());
+                }
+            }
+            orderDTOs.add(dto);
+        }
+        return Result.suc(orderDTOs);
     }
-    @GetMapping("/list/{shopId}")
+    @GetMapping("/list2/{shopId}")
     public Result getOrdersByShopId(@PathVariable Integer shopId) {
         List<Order> orders = orderRepository.findByShopId(shopId);
         return Result.suc(orders, orders.size());
