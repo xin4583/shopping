@@ -6,10 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequestMapping("/order")
@@ -38,9 +35,9 @@ public class OrderController {
         orderRepository.save(order);
         return Result.suc("订单创建成功");
     }
-    @GetMapping("/list1/{userId}/{status}")
-    public Result getOrdersByUserId(@PathVariable Long userId,@PathVariable Integer status){
-        List<Order> orders = orderRepository.findByUserIdAndStatus(userId, status);
+    @GetMapping("/list1/{userId}")
+    public Result getOrdersByUserId(@PathVariable Long userId){
+        List<Order> orders = orderRepository.findByUserId(userId);
         if (orders.isEmpty()){
             return Result.fail("没有找到订单");
         }
@@ -72,6 +69,34 @@ public class OrderController {
             orderDTOs.add(dto);
         }
         return Result.suc(orderDTOs);
+    }
+    @GetMapping("/list3/{userId}")
+    public Result getOrdersSum(@PathVariable Long userId){
+        List<Order> orders = orderRepository.findByUserId(userId);
+        if (orders.isEmpty()){
+            return Result.fail("没有找到订单");
+        }
+        Map<String, Integer> resultMap = new HashMap<>();
+        resultMap.put("unpaid", 0);
+        resultMap.put("unship", 0);
+        resultMap.put("unreceived", 0);
+        resultMap.put("completed", 0);
+        for (Order order : orders) {
+            switch (order.getStatus()) {
+                case 1:
+                    resultMap.put("unpaid", resultMap.get("unpaid") + 1);
+                    break;
+                case 2:
+                    resultMap.put("unship", resultMap.get("unship") + 1);
+                    break;
+                case 3:
+                    resultMap.put("unreceived", resultMap.get("unreceived") + 1);
+                    break;
+                case 4:
+                    resultMap.put("completed", resultMap.get("completed") + 1);
+            }
+        }
+        return Result.suc(resultMap);
     }
     @GetMapping("/list2/{shopId}")
     public Result getOrdersByShopId(@PathVariable Integer shopId) {
