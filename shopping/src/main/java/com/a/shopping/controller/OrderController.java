@@ -38,9 +38,12 @@ public class OrderController {
         orderRepository.save(order);
         return Result.suc("订单创建成功");
     }
-    @GetMapping("/list1/{userId}")
-    public Result getOrdersByUserId(@PathVariable Long userId) {
-        List<Order> orders = orderRepository.findByUserId(userId);
+    @GetMapping("/list1/{userId}/{status}")
+    public Result getOrdersByUserId(@PathVariable Long userId,@PathVariable Integer status){
+        List<Order> orders = orderRepository.findByUserIdAndStatus(userId, status);
+        if (orders.isEmpty()){
+            return Result.fail("没有找到订单");
+        }
         List<OrderDTO> orderDTOs = new ArrayList<>(orders.size());
         for (Order order : orders) {
             OrderDTO dto = new OrderDTO();
