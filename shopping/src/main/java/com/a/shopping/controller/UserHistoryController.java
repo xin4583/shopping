@@ -1,9 +1,6 @@
 package com.a.shopping.controller;
 
-import com.a.shopping.entity.Product;
-import com.a.shopping.entity.Result;
-import com.a.shopping.entity.User;
-import com.a.shopping.entity.UserHistory;
+import com.a.shopping.entity.*;
 import com.a.shopping.repository.ProductRepository;
 import com.a.shopping.repository.UserAddressRepository;
 import com.a.shopping.repository.UserHistoryRepository;
@@ -14,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/userHistory")
@@ -48,7 +46,25 @@ public class UserHistoryController {
             return Result.fail("用户不存在");
         }
         List<UserHistory> histories = userHistoryRepository.findByUserIdOrderByViewTimeDesc(userId);
-        return Result.suc(histories);
+        List<UserHistoryDTO> historyDTOs = histories.stream()
+                .map(history -> {
+                    UserHistoryDTO dto = new UserHistoryDTO();
+                    // 浏览历史相关字段
+                    dto.setHistoryId(history.getId()); // 浏览历史ID
+                    dto.setViewTime(history.getViewTime()); // 浏览时间（可选，可删除）
+
+                    // 商品相关字段（需判空，避免NPE）
+                    Product product = history.getProduct();
+                    if (product != null) {
+                        dto.setProductId(product.getId());
+                        dto.setProductName(product.getName());
+                        dto.setProductPrice(product.getPrice());
+                        dto.setImage(product.getImages().get(0).getImage());
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
+        return Result.suc(historyDTOs);
     }
     @DeleteMapping("/delete/{userId}")
     public Result delete(@PathVariable Long userId) {

@@ -22,7 +22,6 @@ public class UserHistory {
     private User user;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
-    @JsonIgnoreProperties(value = {"hibernateLazyInitializer", "handler", "shop", "category"})
     private Product product;
     @Column(name = "view_time")
     private LocalDateTime viewTime; // 浏览时间（每次浏览更新为当前时间）

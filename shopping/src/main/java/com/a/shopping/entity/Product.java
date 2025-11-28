@@ -1,6 +1,7 @@
 package com.a.shopping.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -35,7 +36,6 @@ public class Product {
     private Integer status=0; // 0-待审核，1-下架,2-上架
     @Column(name = "create_time")
     private LocalDateTime createTime;
-
     // 一个商品有多个图片（一对多）
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ProductImage> images = new ArrayList<>();

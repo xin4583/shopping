@@ -3,6 +3,7 @@ package com.a.shopping.controller;
 import com.a.shopping.configure.QueryPageParam;
 import com.a.shopping.entity.Product;
 import com.a.shopping.entity.ProductDTO;
+import com.a.shopping.entity.ProductListDTO;
 import com.a.shopping.entity.Result;
 import com.a.shopping.repository.ProductCategoryRepository;
 import com.a.shopping.repository.ProductRepository;
@@ -79,6 +80,30 @@ public class ProductController {
         ); 
         Page<Product> productPage = productRepository.findAll(pageable);
         return productPage;
+    }
+    @GetMapping("/list1/{ID}")
+    public Result list1(@PathVariable Long ID) {
+        Product product = productRepository.findById(ID).orElse(null);
+        ProductListDTO productDTO = new ProductListDTO();
+        // 商品基础字段
+        productDTO.setId(product.getId());
+        productDTO.setName(product.getName());
+        productDTO.setSubtitle(product.getSubtitle());
+        productDTO.setPrice(product.getPrice());
+        productDTO.setStock(product.getStock());
+        productDTO.setSales(product.getSales());
+        productDTO.setStatus(product.getStatus());
+        productDTO.setCreateTime(product.getCreateTime());
+        // 店铺相关字段（shopId、shopName、shopLogo 从 product 的 shop 关联中获取）
+        if (product.getShop() != null) {
+            productDTO.setShopId(product.getShop().getId());       // 店铺ID
+            productDTO.setShopName(product.getShop().getName());   // 店铺名称
+            productDTO.setShopLogo(product.getShop().getLogo());   // 店铺logo（二进制）
+        }
+        productDTO.setCategoryId(product.getCategory().getId());
+        productDTO.setProductImg(product.getImages().get(0).getImage());
+        productDTO.setSkus(product.getSkus());
+        return Result.suc(productDTO);
     }
     @GetMapping("/ListPage")
     public Page<Product> searchPage(@RequestBody QueryPageParam queryPageParam) {
