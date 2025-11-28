@@ -1,5 +1,7 @@
 package com.a.shopping.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Lob;
 import lombok.Data;
 import java.math.BigDecimal;
 
@@ -16,7 +18,9 @@ public class CollectedProductDTO {
     // 店铺精简信息（直接包含id和name，不单独创建DTO）
     private Long shopId;
     private String shopName;
-
+    @Lob
+    @Column(columnDefinition = "longblob")
+    private byte[] image;
     // 从Product实体转换为DTO的构造方法
     public CollectedProductDTO(Product product) {
         // 商品信息
@@ -26,7 +30,7 @@ public class CollectedProductDTO {
         this.price = product.getPrice();
         this.sales = product.getSales();
         this.status = product.getStatus();
-        
+        this.image = product.getImages().get(0).getImage();
         // 店铺信息（避免空指针）
         if (product.getShop() != null) {
             this.shopId = Long.valueOf(product.getShop().getId());

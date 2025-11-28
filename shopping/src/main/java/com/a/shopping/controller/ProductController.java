@@ -76,7 +76,7 @@ public class ProductController {
                 queryPageParam.getPageNum() - 1,
                 queryPageParam.getPageSize(),
                 Sort.Direction.ASC, "id"
-        );
+        ); 
         Page<Product> productPage = productRepository.findAll(pageable);
         return productPage;
     }
