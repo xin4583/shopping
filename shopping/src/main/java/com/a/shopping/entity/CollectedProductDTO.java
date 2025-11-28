@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 
 @Data
 public class CollectedProductDTO {
-    // 商品基本信息
+    private Long id;
     private Long productId;       // 商品ID
     private String productName;   // 商品名称
     private String subtitle;      // 副标题
@@ -22,18 +22,22 @@ public class CollectedProductDTO {
     @Column(columnDefinition = "longblob")
     private byte[] image;
     // 从Product实体转换为DTO的构造方法
-    public CollectedProductDTO(Product product) {
-        // 商品信息
+    public CollectedProductDTO(UserCollection userCollection) {
+        this.id = userCollection.getId(); // UserCollection.id 是收藏主键
+        // 商品信息：从收藏关联的商品中获取（和原逻辑一致）
+        Product product = userCollection.getProduct();
         this.productId = product.getId();
         this.productName = product.getName();
         this.subtitle = product.getSubtitle();
         this.price = product.getPrice();
         this.sales = product.getSales();
         this.status = product.getStatus();
-        this.image = product.getImages().get(0).getImage();
-        // 店铺信息（避免空指针）
+        this.image = product.getImages() != null && !product.getImages().isEmpty()
+                ? product.getImages().get(0).getImage()
+                : null;
+        // 店铺信息（和原逻辑一致）
         if (product.getShop() != null) {
-            this.shopId = Long.valueOf(product.getShop().getId());
+            this.shopId = product.getShop().getId().longValue();
             this.shopName = product.getShop().getName();
         }
     }

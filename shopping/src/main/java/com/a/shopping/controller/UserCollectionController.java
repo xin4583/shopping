@@ -45,7 +45,7 @@ public class UserCollectionController {
     public Result list(@PathVariable long userId) {
         List<UserCollection> collections = userCollectionRepository.findByUserId(userId);
         List<CollectedProductDTO> dtoList = collections.stream()
-                .map(collection -> new CollectedProductDTO(collection.getProduct()))  // 从商品转换DTO
+                .map(CollectedProductDTO::new) // 调用新增的构造方法，自动获取收藏ID
                 .collect(Collectors.toList());
         return Result.suc(dtoList);
     }
