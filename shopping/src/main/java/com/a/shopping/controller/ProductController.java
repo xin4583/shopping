@@ -15,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+
 @RestController
 @RequestMapping("/product")
 public class ProductController {
@@ -71,16 +73,6 @@ public class ProductController {
         productRepository.deleteById(id);
         return Result.suc();
     }
-    @GetMapping("/list")
-    public Page<Product> listPage(@RequestBody QueryPageParam queryPageParam) {
-        Pageable pageable = PageRequest.of(
-                queryPageParam.getPageNum() - 1,
-                queryPageParam.getPageSize(),
-                Sort.Direction.ASC, "id"
-        ); 
-        Page<Product> productPage = productRepository.findAll(pageable);
-        return productPage;
-    }
     @GetMapping("/list1/{ID}")
     public Result list1(@PathVariable Long ID) {
         Product product = productRepository.findById(ID).orElse(null);
@@ -106,19 +98,49 @@ public class ProductController {
         return Result.suc(productDTO);
     }
     @GetMapping("/ListPage")
-    public Page<Product> searchPage(@RequestBody QueryPageParam queryPageParam) {
-        // 从param中获取搜索关键词，拼接模糊查询符 %
-        String fuzzyName = "%" + queryPageParam.getParam().get("name") + "%";
-
-        // 构建分页参数（与上面一致：页码转换、每页大小、按id升序）
+    public Page<ProductListDTO> searchPage(@RequestBody QueryPageParam queryPageParam) {
+        // 1. 处理查询参数
+        String name = (String) queryPageParam.getParam().get("name");
+        String fuzzyName = "%" + (name == null ? "" : name) + "%"; // 兼容关键词为null的情况
+        // 2. 构建分页参数
         Pageable pageable = PageRequest.of(
                 queryPageParam.getPageNum() - 1,
                 queryPageParam.getPageSize(),
                 Sort.Direction.ASC, "id"
         );
+        // 3. 执行关联分页查询（避免懒加载）
+        Page<Product> productPage = productRepository.findByNameLikeWithRelations(fuzzyName, pageable);
+        // 4. 将 Page<Product> 转换为 Page<ProductListDTO>（核心映射逻辑）
+        Page<ProductListDTO> productListDTOPage = productPage.map(product -> {
+            ProductListDTO dto = new ProductListDTO();
 
-        // 执行模糊搜索分页查询（注意：JPA方法参数顺序要与Repository定义一致）
-        Page<Product> productPage = productRepository.findByNameLike(pageable, fuzzyName);
-        return productPage;
+            // 商品基础字段（与list1一致）
+            dto.setId(product.getId());
+            dto.setName(product.getName());
+            dto.setSubtitle(product.getSubtitle());
+            dto.setPrice(product.getPrice());
+            dto.setStock(product.getStock());
+            dto.setSales(product.getSales());
+            dto.setStatus(product.getStatus());
+            dto.setCreateTime(product.getCreateTime());
+            // 店铺相关字段（与list1一致）
+            if (product.getShop() != null) {
+                dto.setShopId(product.getShop().getId());
+                dto.setShopName(product.getShop().getName());
+                dto.setShopLogo(product.getShop().getLogo()); // 二进制logo
+            }
+            // 分类ID（与list1一致，取category的id）
+            dto.setCategoryId(product.getCategory() != null ? product.getCategory().getId() : null);
+
+            // 商品主图（取第一张图片的image字段，与list1一致）
+            if (product.getImages() != null && !product.getImages().isEmpty()) {
+                dto.setProductImg(product.getImages().get(0).getImage()); // 第一张图的二进制数据
+            }
+            // SKU列表（与list1一致，直接赋值）
+            dto.setSkus(product.getSkus() != null ? product.getSkus() : new ArrayList<>());
+            return dto;
+        });
+        // 5. 返回DTO分页结果（格式与list1完全一致）
+        return productListDTOPage;
     }
 }

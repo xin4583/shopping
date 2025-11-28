@@ -37,6 +37,7 @@ public class ProductCommentController {
         for (int i = 0; i < productComments.size(); i++) {
             ProductCommentDTO productCommentDTO = new ProductCommentDTO();
             productCommentDTO.setId(productComments.get(i).getId());
+            productCommentDTO.setUserImage(userRepository.findById(productComments.get(i).getUser().getId()).get().getAvatar());
             productCommentDTO.setContent(productComments.get(i).getContent());
             productCommentDTO.setCreateTime(productComments.get(i).getCreateTime());
             productCommentDTO.setScore(productComments.get(i).getScore());

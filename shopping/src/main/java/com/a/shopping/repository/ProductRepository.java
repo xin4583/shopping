@@ -12,4 +12,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> findByNameLike(Pageable pageable, String fuzzyName);
     @Query("SELECT p FROM product p LEFT JOIN FETCH p.images WHERE p.id = :productId")
     Product findProductWithFirstImage(@Param("productId") Long productId);
+    @Query(value = "SELECT p FROM product p " +
+            "JOIN FETCH p.shop s " +          // 加载店铺（shopId/shopName/shopLogo）
+            "JOIN FETCH p.category c " +      // 加载分类（取categoryId）
+            "LEFT JOIN FETCH p.images i " +   // 左连接加载图片（允许无图商品）
+            "LEFT JOIN FETCH p.skus sk " +    // 左连接加载SKU（允许无SKU商品）
+            "WHERE p.name LIKE :fuzzyName",
+            countQuery = "SELECT COUNT(p) FROM product p WHERE p.name LIKE :fuzzyName") // 单独计数查询（避免关联影响分页总数）
+    Page<Product> findByNameLikeWithRelations(@Param("fuzzyName") String fuzzyName, Pageable pageable);
 }
