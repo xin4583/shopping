@@ -97,7 +97,7 @@ public class ProductController {
         productDTO.setSkus(product.getSkus());
         return Result.suc(productDTO);
     }
-    @GetMapping("/ListPage")
+    @PostMapping("/ListPage")
     public Page<ProductListDTO> searchPage(@RequestBody QueryPageParam queryPageParam) {
         // 1. 处理查询参数
         String name = (String) queryPageParam.getParam().get("name");
