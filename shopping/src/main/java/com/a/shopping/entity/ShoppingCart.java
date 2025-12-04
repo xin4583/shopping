@@ -21,6 +21,10 @@ public class ShoppingCart {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+    private Integer quantity;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_sku_id", nullable = false)
+    private ProductSku sku;
     @Column(name = "create_time", updatable = false)
     private LocalDateTime createTime;
     @PrePersist

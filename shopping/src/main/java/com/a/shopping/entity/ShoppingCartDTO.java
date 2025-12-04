@@ -16,12 +16,16 @@ public class ShoppingCartDTO {
     private Integer status;       // 状态（0-待审核，1-下架，2-上架）
     private Long shopId;
     private String shopName;
+    private Long skuId;         // 规格ID
+    private String specs;       // 规格 JSON
+    private Integer quantity;
     @Lob
     @Column(columnDefinition = "longblob")
     private byte[] image;
     public ShoppingCartDTO(ShoppingCart shoppingCart) {
         this.id = shoppingCart.getId();
         Product product = shoppingCart.getProduct();
+        this.quantity = shoppingCart.getQuantity();
         this.productId = product.getId();
         this.productName = product.getName();
         this.subtitle = product.getSubtitle();
@@ -35,5 +39,8 @@ public class ShoppingCartDTO {
             this.shopId = product.getShop().getId().longValue();
             this.shopName = product.getShop().getName();
         }
+        ProductSku s = shoppingCart.getSku();
+        this.skuId = s.getId();
+        this.specs = s.getSpecs();
     }
 }

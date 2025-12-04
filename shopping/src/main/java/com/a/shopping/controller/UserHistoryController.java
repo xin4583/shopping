@@ -78,10 +78,10 @@ public class UserHistoryController {
                 .collect(Collectors.toList());
         return Result.suc(historyDTOs);
     }
-    @DeleteMapping("/delete/{userId}")
-    public Result delete(@PathVariable Long userId) {
-        if (userHistoryRepository.existsById(userId)) {
-            userHistoryRepository.deleteById(userId);
+    @DeleteMapping("/delete/{Id}")
+    public Result delete(@PathVariable Long Id) {
+        if (userHistoryRepository.existsById(Id)) {
+            userHistoryRepository.deleteById(Id);
             return Result.suc("删除成功");
         }
         return Result.fail("记录不存在");
