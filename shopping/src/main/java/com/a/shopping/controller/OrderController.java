@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.swing.text.html.Option;
+import java.math.BigDecimal;
 import java.util.*;
 
 @RestController
@@ -32,6 +34,12 @@ public class OrderController {
         Optional<ProductSku> productSku=productSkuRepository.findById(order.getSku().getId());
         productSku.get().setStock(productSku.get().getStock()-order.getQuantity());
         productSkuRepository.save(productSku.get());
+        Optional<Product> product=productRepository.findById(order.getProduct().getId());
+        product.get().setSales(product.get().getSales()+order.getQuantity());
+        product.get().setStock(product.get().getStock()-order.getQuantity());
+        productSkuRepository.save(productSku.get());
+        order.setTotalAmount(new BigDecimal(order.getPrice()).multiply(BigDecimal.valueOf(order.getQuantity())));
+        order.setPayAmount(new BigDecimal(order.getPrice()).multiply(BigDecimal.valueOf(order.getQuantity())));
         orderRepository.save(order);
         return Result.suc("订单创建成功");
     }
@@ -112,6 +120,10 @@ public class OrderController {
         order.setStatus(4); // 设置为已取消状态
         Optional<ProductSku> productSku=productSkuRepository.findById(order.getSku().getId());
         productSku.get().setStock(productSku.get().getStock()+order.getQuantity());
+        Optional<Product> product=productRepository.findById(order.getProduct().getId());
+        product.get().setSales(product.get().getSales()-order.getQuantity());
+        product.get().setStock(product.get().getStock()+order.getQuantity());
+        productRepository.save(product.get());
         productSkuRepository.save(productSku.get());
         return Result.suc("退单成功");
     }

@@ -34,7 +34,6 @@ public class ProductController {
         product.setName(productDTO.getName());
         product.setSubtitle(productDTO.getSubtitle());
         product.setPrice(productDTO.getPrice());
-        product.setStock(productDTO.getStock());
         Product product1=productRepository.save(product);
         return product1==null?Result.fail("添加失败"):Result.suc();
     }

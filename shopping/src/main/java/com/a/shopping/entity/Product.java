@@ -31,7 +31,7 @@ public class Product {
     private String name; // 商品名称
     private String subtitle; // 副标题
     private BigDecimal price; // 售价
-    private Integer stock; // 库存
+    private Integer stock=0; // 库存
     private Integer sales=0; // 销量
     private Integer status=0; // 0-待审核，1-下架,2-上架
     @Column(name = "create_time")
