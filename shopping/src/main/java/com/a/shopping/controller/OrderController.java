@@ -121,12 +121,13 @@ public class OrderController {
         if (order == null) {
             return Result.fail("订单不存在");
         }
-        order.setStatus(4); // 设置为已取消状态
+        order.setStatus(5); // 设置为已取消状态
         Optional<ProductSku> productSku=productSkuRepository.findById(order.getSku().getId());
         productSku.get().setStock(productSku.get().getStock()+order.getQuantity());
         Optional<Product> product=productRepository.findById(order.getProduct().getId());
         product.get().setSales(product.get().getSales()-order.getQuantity());
         product.get().setStock(product.get().getStock()+order.getQuantity());
+        orderRepository.save(order);
         productRepository.save(product.get());
         productSkuRepository.save(productSku.get());
         return Result.suc("退单成功");
