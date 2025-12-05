@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.swing.text.html.Option;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -41,7 +42,10 @@ public class OrderController {
         order.setTotalAmount(new BigDecimal(order.getPrice()).multiply(BigDecimal.valueOf(order.getQuantity())));
         order.setPayAmount(new BigDecimal(order.getPrice()).multiply(BigDecimal.valueOf(order.getQuantity())));
         orderRepository.save(order);
-        return Result.suc("订单创建成功",order.getId());
+        Map<String,Object> map=new HashMap<>();
+        map.put("orderId",order.getId());
+        map.put("payAmount",order.getPayAmount());
+        return Result.suc("订单创建成功",map);
     }
     @GetMapping("/list1/{userId}")
     public Result getOrdersByUserId(@PathVariable Long userId){
@@ -138,7 +142,20 @@ public class OrderController {
     @PostMapping("/update")
     public Result updateOrder(@RequestBody Order orderUpdate) {
         if (orderRepository.existsById(orderUpdate.getId())) {
-            orderRepository.save(orderUpdate);
+            Order order = orderRepository.findById(orderUpdate.getId()).get();
+            order.setStatus(orderUpdate.getStatus());
+            switch (orderUpdate.getStatus()) {
+                case 2:
+                    order.setPayTime(LocalDateTime.now());
+                    break;
+                case 3:
+                    order.setDeliverTime(LocalDateTime.now());
+                    break;
+                case 4:
+                    order.setReceiveTime(LocalDateTime.now());
+                    break;
+            }
+            orderRepository.save(order);
             return Result.suc("订单更新成功");
         }
         return Result.fail("订单不存在");

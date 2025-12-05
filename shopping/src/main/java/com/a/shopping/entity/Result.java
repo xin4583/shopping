@@ -26,6 +26,7 @@ public class Result {
     public static Result suc(String msg,Object data){
         return result(200,msg,0,data);
     }
+
     public static Result suc(Object data,long total){
         return result(200,"成功",total,data);
     }
