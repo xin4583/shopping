@@ -41,7 +41,7 @@ public class OrderController {
         order.setTotalAmount(new BigDecimal(order.getPrice()).multiply(BigDecimal.valueOf(order.getQuantity())));
         order.setPayAmount(new BigDecimal(order.getPrice()).multiply(BigDecimal.valueOf(order.getQuantity())));
         orderRepository.save(order);
-        return Result.suc("订单创建成功");
+        return Result.suc("订单创建成功",order.getId());
     }
     @GetMapping("/list1/{userId}")
     public Result getOrdersByUserId(@PathVariable Long userId){
