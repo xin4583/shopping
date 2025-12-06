@@ -1,6 +1,7 @@
 package com.a.shopping.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.DynamicInsert;
@@ -21,7 +22,7 @@ public class ProductSku {
     // 关联：规格所属商品（多对一）
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "product_id", nullable = false)
-    @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private Product product;
 
     @Column(columnDefinition = "JSON", nullable = false)

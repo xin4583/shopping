@@ -17,11 +17,12 @@ public class ProductSkuController {
     ProductRepository productRepository;
     @PostMapping("/add")
     public Result addProductSku(@RequestBody ProductSku productSku) {
+
         if (productSku.getProduct() == null || productSku.getSpecs() == null) {
             return Result.fail("参数不完整");
         }
         Product product = productRepository.findById(productSku.getProduct().getId()).orElse(null);
-        product.setSales(product.getSales()+productSku.getStock());
+        product.setStock(product.getStock()+productSku.getStock());
         productRepository.save(product);
        productSkuRepository.save(productSku);
        return Result.suc();

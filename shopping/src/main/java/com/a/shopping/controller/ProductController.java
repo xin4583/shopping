@@ -142,4 +142,53 @@ public class ProductController {
         // 5. 返回DTO分页结果（格式与list1完全一致）
         return productListDTOPage;
     }
+    @PostMapping("/listByShop/{shopId}")
+    public Page<ProductListDTO> listByShopId(
+            @PathVariable Long shopId,
+            @RequestBody QueryPageParam queryPageParam) {
+
+        // 1. 验证店铺是否存在
+        if (!shopRepository.existsById(shopId)) {
+            throw new RuntimeException("店铺不存在"); // 实际项目中建议使用自定义异常并全局处理
+        }
+
+        // 2. 构建分页参数（排序方式保持与ListPage接口一致）
+        Pageable pageable = PageRequest.of(
+                queryPageParam.getPageNum() - 1,
+                queryPageParam.getPageSize(),
+                Sort.Direction.ASC, "id"
+        );
+
+        // 3. 执行分页查询（关联查询避免懒加载问题）
+        Page<Product> productPage = productRepository.findByShopIdWithRelations(shopId, pageable);
+
+        // 4. 转换为ProductListDTO（复用已有的映射逻辑）
+        return productPage.map(product -> {
+            ProductListDTO dto = new ProductListDTO();
+            // 商品基础字段
+            dto.setId(product.getId());
+            dto.setName(product.getName());
+            dto.setSubtitle(product.getSubtitle());
+            dto.setPrice(product.getPrice());
+            dto.setStock(product.getStock());
+            dto.setSales(product.getSales());
+            dto.setStatus(product.getStatus());
+            dto.setCreateTime(product.getCreateTime());
+            // 店铺相关字段
+            if (product.getShop() != null) {
+                dto.setShopId(product.getShop().getId().intValue());
+                dto.setShopName(product.getShop().getName());
+                dto.setShopLogo(product.getShop().getLogo());
+            }
+            // 分类ID
+            dto.setCategoryId(product.getCategory() != null ? product.getCategory().getId() : null);
+            // 商品主图
+            if (product.getImages() != null && !product.getImages().isEmpty()) {
+                dto.setProductImg(product.getImages().get(0).getImage());
+            }
+            // SKU列表
+            dto.setSkus(product.getSkus() != null ? product.getSkus() : new ArrayList<>());
+            return dto;
+        });
+    }
 }

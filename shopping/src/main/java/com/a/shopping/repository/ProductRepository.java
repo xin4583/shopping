@@ -20,4 +20,11 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             "WHERE p.name LIKE :fuzzyName",
             countQuery = "SELECT COUNT(p) FROM product p WHERE p.name LIKE :fuzzyName") // 单独计数查询（避免关联影响分页总数）
     Page<Product> findByNameLikeWithRelations(@Param("fuzzyName") String fuzzyName, Pageable pageable);
+    @Query(value = "SELECT p FROM product p " +
+            "JOIN FETCH p.shop s " +
+            "JOIN FETCH p.category c " +
+            "LEFT JOIN FETCH p.images i " +
+            "WHERE p.shop.id = :shopId",
+            countQuery = "SELECT COUNT(p) FROM product p WHERE p.shop.id = :shopId")
+    Page<Product> findByShopIdWithRelations(@Param("shopId") Long shopId, Pageable pageable);
 }
