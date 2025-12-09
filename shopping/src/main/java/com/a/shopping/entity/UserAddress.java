@@ -20,7 +20,7 @@ public class UserAddress {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private User user;
     @Column(nullable = false)
-    private String receiver;// 收件人
+    private String receiver; //收件人
     @Column(nullable = false)
     private String phone;
     @Column(nullable = false)

@@ -47,6 +47,7 @@ public class OrderController {
         map.put("payAmount",order.getPayAmount());
         return Result.suc("订单创建成功",map);
     }
+    // 用户端获取订单列表
     @GetMapping("/list1/{userId}")
     public Result getOrdersByUserId(@PathVariable Long userId){
         List<Order> orders = orderRepository.findByUserId(userId);
@@ -70,6 +71,7 @@ public class OrderController {
             dto.setPayTime(order.getPayTime());
             dto.setDeliverTime(order.getDeliverTime());
             dto.setReceiveTime(order.getReceiveTime());
+            dto.setAddress(order.getUserAddress());
             Product product = productRepository.findProductWithFirstImage(order.getProduct().getId());
             if (product != null) {
                 dto.setProductName(product.getName());
@@ -82,6 +84,7 @@ public class OrderController {
         }
         return Result.suc(orderDTOs);
     }
+    // 用户端获取各个状态订单数量
     @GetMapping("/list3/{userId}")
     public Result getOrdersSum(@PathVariable Long userId){
         List<Order> orders = orderRepository.findByUserId(userId);
@@ -110,6 +113,7 @@ public class OrderController {
         }
         return Result.suc(resultMap);
     }
+    // 店铺端获取订单列表
     @GetMapping("/list2/{shopId}")
     public Result getOrdersByShopId(@PathVariable Integer shopId) {
         List<Order> orders = orderRepository.findByShopId(shopId);

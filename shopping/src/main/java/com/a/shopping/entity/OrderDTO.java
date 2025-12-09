@@ -13,6 +13,7 @@ public class OrderDTO {
     private Long shopId;
     private Long productId;
     private Long skuId;
+    private UserAddress address;
     private String productName;
     @Lob
     @Column(columnDefinition = "longblob")
