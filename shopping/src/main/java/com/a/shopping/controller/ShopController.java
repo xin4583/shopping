@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/shop")
@@ -63,13 +64,14 @@ public class ShopController {
         Shop shop1=shopRepository.save(shop);
         return shop1==null?Result.fail("更新失败"):Result.suc();
     }
-    @GetMapping("/list/{id}")
-    public Result get(@PathVariable Long id) {
-        Shop shop = shopRepository.findById(id).orElse(null);
-        if (shop == null) {
-            return Result.fail("店铺不存在");
+    @GetMapping("/list/{userId}")
+    public Result getShopsByUserId(@PathVariable Long userId) {
+        // 根据用户ID查询店铺列表
+        List<Shop> shops = shopRepository.findByUserId(userId);
+        if (shops == null || shops.isEmpty()) {
+            return Result.fail("该用户暂无店铺信息");
         }
-        return Result.suc(shop);
+        return Result.suc(shops);
     }
 }
 

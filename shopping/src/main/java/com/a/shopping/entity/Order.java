@@ -52,7 +52,6 @@ public class Order {
     private LocalDateTime payTime; // 支付时间
     @Column(name = "deliver_time")
     private LocalDateTime deliverTime; // 发货时间
-
     @Column(name = "receive_time")
     private LocalDateTime receiveTime; // 确认收货时间
 
