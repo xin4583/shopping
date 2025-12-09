@@ -12,7 +12,7 @@ public class OrderDTO {
     private Long userId;
     private Long shopId;
     private Long productId;
-    private Long skuId;
+    private ProductSku sku;
     private UserAddress address;
     private String productName;
     @Lob

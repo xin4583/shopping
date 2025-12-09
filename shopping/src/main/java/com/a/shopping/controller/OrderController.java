@@ -61,7 +61,7 @@ public class OrderController {
             dto.setUserId(order.getUser().getId());
             dto.setShopId(order.getUser().getId());
             dto.setProductId(order.getProduct().getId());
-            dto.setSkuId(order.getSku().getId());
+            dto.setSku(order.getSku());
             dto.setPrice(order.getPrice());
             dto.setQuantity(order.getQuantity());
             dto.setTotalAmount(order.getTotalAmount());
@@ -83,6 +83,40 @@ public class OrderController {
             orderDTOs.add(dto);
         }
         return Result.suc(orderDTOs);
+    }
+    //查单个订单详情
+    @GetMapping("/listDetails/{id}")
+    public Result getOrdersByUUID(@PathVariable UUID id){
+        Optional<Order> order = orderRepository.findById(id);
+        if (order == null){
+            return Result.fail("没有找到订单");
+        }
+        OrderDTO dto = new OrderDTO();
+        dto.setId(order.get().getId());
+        dto.setUserId(order.get().getUser().getId());
+        dto.setShopId(order.get().getUser().getId());
+        dto.setProductId(order.get().getProduct().getId());
+        dto.setSku(order.get().getSku());
+        dto.setPrice(order.get().getPrice());
+        dto.setQuantity(order.get().getQuantity());
+        dto.setTotalAmount(order.get().getTotalAmount());
+        dto.setPayAmount(order.get().getPayAmount());
+        dto.setStatus(order.get().getStatus());
+        dto.setCreateTime(order.get().getCreateTime());
+        dto.setPayTime(order.get().getPayTime());
+        dto.setDeliverTime(order.get().getDeliverTime());
+        dto.setReceiveTime(order.get().getReceiveTime());
+        dto.setAddress(order.get().getUserAddress());
+        Product product = productRepository.findProductWithFirstImage(order.get().getProduct().getId());
+        if (product != null) {
+            dto.setProductName(product.getName());
+            if (!CollectionUtils.isEmpty(product.getImages())) {
+                ProductImage firstImage = product.getImages().get(0);
+                dto.setProductImage(firstImage.getImage());
+            }
+        }
+
+        return Result.suc(dto);
     }
     // 用户端获取各个状态订单数量
     @GetMapping("/list3/{userId}")
