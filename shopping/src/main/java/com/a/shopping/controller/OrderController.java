@@ -147,11 +147,70 @@ public class OrderController {
         }
         return Result.suc(resultMap);
     }
+    @GetMapping("/listSumByshop/{shopId}")
+    public Result getOrdersSum2(@PathVariable Long shopId){
+        List<Order> orders = orderRepository.findByShopId(shopId);
+        if (orders.isEmpty()){
+            return Result.fail("没有找到订单");
+        }
+        Map<String, Integer> resultMap = new HashMap<>();
+        resultMap.put("unpaid", 0);
+        resultMap.put("unship", 0);
+        resultMap.put("unreceived", 0);
+        resultMap.put("completed", 0);
+        for (Order order : orders) {
+            switch (order.getStatus()) {
+                case 1:
+                    resultMap.put("unpaid", resultMap.get("unpaid") + 1);
+                    break;
+                case 2:
+                    resultMap.put("unship", resultMap.get("unship") + 1);
+                    break;
+                case 3:
+                    resultMap.put("unreceived", resultMap.get("unreceived") + 1);
+                    break;
+                case 4:
+                    resultMap.put("completed", resultMap.get("completed") + 1);
+            }
+        }
+        return Result.suc(resultMap);
+    }
     // 店铺端获取订单列表
     @GetMapping("/list2/{shopId}")
-    public Result getOrdersByShopId(@PathVariable Integer shopId) {
+    public Result getOrdersByShopId(@PathVariable Long shopId) {
         List<Order> orders = orderRepository.findByShopId(shopId);
-        return Result.suc(orders, orders.size());
+        if (orders.isEmpty()){
+            return Result.fail("没有找到订单");
+        }
+        List<OrderDTO> orderDTOs = new ArrayList<>(orders.size());
+        for (Order order : orders) {
+            OrderDTO dto = new OrderDTO();
+            dto.setId(order.getId());
+            dto.setUserId(order.getUser().getId());
+            dto.setShopId(order.getUser().getId());
+            dto.setProductId(order.getProduct().getId());
+            dto.setSku(order.getSku());
+            dto.setPrice(order.getPrice());
+            dto.setQuantity(order.getQuantity());
+            dto.setTotalAmount(order.getTotalAmount());
+            dto.setPayAmount(order.getPayAmount());
+            dto.setStatus(order.getStatus());
+            dto.setCreateTime(order.getCreateTime());
+            dto.setPayTime(order.getPayTime());
+            dto.setDeliverTime(order.getDeliverTime());
+            dto.setReceiveTime(order.getReceiveTime());
+            dto.setAddress(order.getUserAddress());
+            Product product = productRepository.findProductWithFirstImage(order.getProduct().getId());
+            if (product != null) {
+                dto.setProductName(product.getName());
+                if (!CollectionUtils.isEmpty(product.getImages())) {
+                    ProductImage firstImage = product.getImages().get(0);
+                    dto.setProductImage(firstImage.getImage());
+                }
+            }
+            orderDTOs.add(dto);
+        }
+        return Result.suc(orderDTOs);
     }
     @PostMapping("/cancel/{id}")
     public Result cancelOrder(@PathVariable UUID id) {
