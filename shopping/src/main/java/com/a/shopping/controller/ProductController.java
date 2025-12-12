@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/product")
@@ -78,6 +79,11 @@ public class ProductController {
     }
     @DeleteMapping("/delete/{id}")
     public Result delete(@PathVariable Long id) {
+        if (productRepository.findById(id).orElse(null) == null) {
+            return Result.fail("商品不存在");
+        }
+        List<ProductImage>  productImageS = productImageRepository.findByProductId(id);
+        productImageRepository.deleteAll(productImageS);
         productRepository.deleteById(id);
         return Result.suc();
     }
