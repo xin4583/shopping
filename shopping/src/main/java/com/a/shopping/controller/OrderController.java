@@ -36,6 +36,9 @@ public class OrderController {
         productSku.get().setStock(productSku.get().getStock()-order.getQuantity());
         productSkuRepository.save(productSku.get());
         Optional<Product> product=productRepository.findById(order.getProduct().getId());
+        if (productSku.get().getStock()<=0){
+            return Result.fail("库存不足");
+        }
         product.get().setSales(product.get().getSales()+order.getQuantity());
         product.get().setStock(product.get().getStock()-order.getQuantity());
         productSkuRepository.save(productSku.get());

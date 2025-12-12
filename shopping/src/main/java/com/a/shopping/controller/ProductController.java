@@ -1,11 +1,9 @@
 package com.a.shopping.controller;
 
 import com.a.shopping.configure.QueryPageParam;
-import com.a.shopping.entity.Product;
-import com.a.shopping.entity.ProductDTO;
-import com.a.shopping.entity.ProductListDTO;
-import com.a.shopping.entity.Result;
+import com.a.shopping.entity.*;
 import com.a.shopping.repository.ProductCategoryRepository;
+import com.a.shopping.repository.ProductImageRepository;
 import com.a.shopping.repository.ProductRepository;
 import com.a.shopping.repository.ShopRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +12,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 @RestController
@@ -26,8 +26,13 @@ public class ProductController {
     ShopRepository shopRepository;
     @Autowired
     ProductCategoryRepository productCategoryRepository;
+    @Autowired
+    ProductImageRepository productImageRepository;
     @PostMapping("/add")
-    public Result add(@RequestBody ProductDTO productDTO) {
+    public Result add(@RequestPart("productDTO") ProductDTO productDTO,@RequestPart("file") MultipartFile file) throws IOException {
+        if (file.isEmpty()) {
+            return Result.fail("请选择图片文件");
+        }
         Product product = new Product();
         product.setShop(shopRepository.findById(productDTO.getShopId()).orElse(null));
         product.setCategory(productCategoryRepository.findById(productDTO.getCategoryId()).orElse(null));
@@ -35,6 +40,10 @@ public class ProductController {
         product.setSubtitle(productDTO.getSubtitle());
         product.setPrice(productDTO.getPrice());
         Product product1=productRepository.save(product);
+        ProductImage productImage = new ProductImage();
+        productImage.setImage(file.getBytes());  // 转换文件为字节数组
+        productImage.setProduct(product1);
+        productImageRepository.save(productImage);
         return product1==null?Result.fail("添加失败"):Result.suc();
     }
     @PostMapping("/update")
