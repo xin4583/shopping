@@ -17,9 +17,13 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             "JOIN FETCH p.category c " +      // 加载分类（取categoryId）
             "LEFT JOIN FETCH p.images i " +   // 左连接加载图片（允许无图商品）
             // "LEFT JOIN FETCH p.skus sk " +    // 左连接加载SKU（允许无SKU商品）
-            "WHERE p.name LIKE :fuzzyName",
-            countQuery = "SELECT COUNT(p) FROM product p WHERE p.name LIKE :fuzzyName") // 单独计数查询（避免关联影响分页总数）
-    Page<Product> findByNameLikeWithRelations(@Param("fuzzyName") String fuzzyName, Pageable pageable);
+            "WHERE p.name LIKE :fuzzyName " +
+            "AND (:status IS NULL OR p.status = :status)",
+            countQuery = "SELECT COUNT(p) FROM product p WHERE p.name LIKE :fuzzyName AND (:status IS NULL OR p.status = :status)") // 计数查询同步新增状态条件
+    Page<Product> findByNameLikeAndStatusWithRelations(
+            @Param("fuzzyName") String fuzzyName,
+            @Param("status") Integer status,
+            Pageable pageable);
     @Query(value = "SELECT p FROM product p " +
             "JOIN FETCH p.shop s " +
             "JOIN FETCH p.category c " +

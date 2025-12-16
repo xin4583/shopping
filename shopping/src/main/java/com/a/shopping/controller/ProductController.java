@@ -122,8 +122,9 @@ public class ProductController {
                 queryPageParam.getPageSize(),
                 Sort.Direction.ASC, "id"
         );
+        Integer status = (Integer) queryPageParam.getParam().get("status");
         // 3. 执行关联分页查询（避免懒加载）
-        Page<Product> productPage = productRepository.findByNameLikeWithRelations(fuzzyName, pageable);
+        Page<Product> productPage = productRepository.findByNameLikeAndStatusWithRelations(fuzzyName, status, pageable);
         // 4. 将 Page<Product> 转换为 Page<ProductListDTO>（核心映射逻辑）
         Page<ProductListDTO> productListDTOPage = productPage.map(product -> {
             ProductListDTO dto = new ProductListDTO();
