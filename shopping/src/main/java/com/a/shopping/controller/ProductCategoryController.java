@@ -30,9 +30,13 @@ public class ProductCategoryController {
         productCategoryRepository.deleteById(id);
         return Result.suc();
     }
-    @GetMapping("/list/{parentId}")
+    @PostMapping("/list/{parentId}")
     public Result list(@PathVariable Long parentId) {
         return Result.suc(productCategoryRepository.findByParentId(parentId));
+    }
+    @GetMapping("/listALL")
+    public Result list() {
+        return Result.suc(productCategoryRepository.findAll());
     }
 
 }
