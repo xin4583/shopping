@@ -11,7 +11,7 @@ import java.util.List;
 @Data
 public class ProductListDTO {
     private Long id;
-    private Integer shopId;
+    private Long shopId;
     private String shopName;
     private byte[] shopLogo;
     private Long categoryId;

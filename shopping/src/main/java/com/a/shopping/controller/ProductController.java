@@ -87,6 +87,7 @@ public class ProductController {
         productRepository.deleteById(id);
         return Result.suc();
     }
+
     @GetMapping("/list1/{ID}")
     public Result list1(@PathVariable Long ID) {
         Product product = productRepository.findById(ID).orElse(null);
@@ -192,7 +193,7 @@ public class ProductController {
             dto.setCreateTime(product.getCreateTime());
             // 店铺相关字段
             if (product.getShop() != null) {
-                dto.setShopId(product.getShop().getId().intValue());
+                dto.setShopId(product.getShop().getId());
                 dto.setShopName(product.getShop().getName());
                 dto.setShopLogo(product.getShop().getLogo());
             }

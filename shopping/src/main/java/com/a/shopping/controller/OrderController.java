@@ -2,6 +2,7 @@ package com.a.shopping.controller;
 
 import com.a.shopping.entity.*;
 import com.a.shopping.repository.*;
+import com.a.shopping.service.SalesStatisticsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,8 @@ public class OrderController {
     ProductRepository productRepository;
     @Autowired
     ProductSkuRepository productSkuRepository;
+    @Autowired
+    SalesStatisticsService salesStatisticsService;
     @PostMapping("/add")
     public Result addOrder(@RequestBody Order order) {
         if (order.getUser() == null || order.getUser().getId() == null
@@ -254,6 +257,7 @@ public class OrderController {
                     break;
                 case 4:
                     order.setReceiveTime(LocalDateTime.now());
+                    salesStatisticsService.updateStatistics(order);
                     break;
             }
             orderRepository.save(order);
