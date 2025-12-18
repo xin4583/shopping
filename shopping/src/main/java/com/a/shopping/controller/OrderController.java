@@ -164,6 +164,7 @@ public class OrderController {
         resultMap.put("unship", 0);
         resultMap.put("unreceived", 0);
         resultMap.put("completed", 0);
+        resultMap.put("cancelled", 0);
         for (Order order : orders) {
             switch (order.getStatus()) {
                 case 1:
@@ -177,6 +178,10 @@ public class OrderController {
                     break;
                 case 4:
                     resultMap.put("completed", resultMap.get("completed") + 1);
+                    break;
+                case 5:
+                    resultMap.put("cancelled", resultMap.get("cancelled") + 1);
+                    break;
             }
         }
         return Result.suc(resultMap);
