@@ -2,6 +2,7 @@ package com.a.shopping.controller;
 
 import com.a.shopping.entity.Result;
 import com.a.shopping.entity.SalesStatistics;
+import com.a.shopping.entity.SalesStatisticsDTO;
 import com.a.shopping.repository.SalesStatisticsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -29,7 +31,19 @@ public class StatisticsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
         List<SalesStatistics> stats = statisticsRepository
                 .findByShopIdAndProductIsNotNullAndStatDateBetween(shopId, start, end);
-        return Result.suc(stats);
+        List<SalesStatisticsDTO> statsDTO = new ArrayList<>();
+        for (SalesStatistics stat : stats) {
+            statsDTO.add(new SalesStatisticsDTO() {{
+                setId(stat.getId());
+                setStatDate(stat.getStatDate());
+                setProductId(stat.getProduct().getId());
+                setProductName(stat.getProduct().getName());
+                setShopId(shopId);
+                setDailyAmount(stat.getDailyAmount());
+                setTotalAmount(stat.getTotalAmount());
+            }});
+        }
+        return Result.suc(statsDTO);
     }
 
     /**

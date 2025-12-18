@@ -45,7 +45,7 @@ public class ProductController {
         productImage.setImage(file.getBytes());  // 转换文件为字节数组
         productImage.setProduct(product1);
         productImageRepository.save(productImage);
-        return product1==null?Result.fail("添加失败"):Result.suc();
+        return product1==null?Result.fail("添加失败"):Result.suc(product.getId());
     }
     @PostMapping("/update")
     public Result update(@RequestBody ProductDTO productDTO) {
