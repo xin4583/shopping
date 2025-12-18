@@ -75,7 +75,6 @@ public class StatisticsController {
     public Result getProductTotalStats(@RequestParam Long shopId) {
         List<SalesStatistics> stats = statisticsRepository.findLatestProductStatsByShopId(shopId);
         List<SalesStatisticsDTO> result = new ArrayList<>();
-
         for (SalesStatistics stat : stats) {
             SalesStatisticsDTO dto = new SalesStatisticsDTO();
             dto.setProductId(stat.getProduct().getId());
@@ -84,7 +83,6 @@ public class StatisticsController {
             dto.setTotalAmount(stat.getTotalAmount()); // 商品累计总营业额
             result.add(dto);
         }
-
         return Result.suc(result);
     }
 }

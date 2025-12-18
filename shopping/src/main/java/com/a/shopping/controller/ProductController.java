@@ -110,6 +110,7 @@ public class ProductController {
         productDTO.setCategoryId(product.getCategory().getId());
         productDTO.setProductImg(product.getImages().get(0).getImage());
         productDTO.setSkus(product.getSkus());
+        productDTO.setScore(product.getScore());
         return Result.suc(productDTO);
     }
     @PostMapping("/ListPage")
