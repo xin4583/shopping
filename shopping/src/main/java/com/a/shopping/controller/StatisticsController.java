@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/statistics")
@@ -58,21 +59,32 @@ public class StatisticsController {
                 .findByShopIdAndProductIsNullAndStatDateBetween(shopId, start, end);
         return Result.suc(stats);
     }
-
     /**
      * 查询店铺总营业额
      */
     @GetMapping("/shop/total")
     public Result getShopTotal(@RequestParam Long shopId) {
         // 总营业额为最新统计记录的totalAmount（商品为null的店铺维度）
-        List<SalesStatistics> latestStats = statisticsRepository
-                .findByShopIdAndProductIsNullAndStatDateBetween(
-                        shopId, LocalDate.MIN, LocalDate.MAX);
-        if (latestStats.isEmpty()) {
-            return Result.suc(BigDecimal.ZERO);
+        Optional<BigDecimal> latestStat = statisticsRepository.sumTotalByShopIdBeforeDateAndProductIsNull(shopId, LocalDate.now());
+        return Result.suc(latestStat);
+    }
+    /**
+     * 查询店铺下每个商品的总营业额
+     */
+    @GetMapping("/product/total")
+    public Result getProductTotalStats(@RequestParam Long shopId) {
+        List<SalesStatistics> stats = statisticsRepository.findLatestProductStatsByShopId(shopId);
+        List<SalesStatisticsDTO> result = new ArrayList<>();
+
+        for (SalesStatistics stat : stats) {
+            SalesStatisticsDTO dto = new SalesStatisticsDTO();
+            dto.setProductId(stat.getProduct().getId());
+            dto.setProductName(stat.getProduct().getName());
+            dto.setShopId(shopId);
+            dto.setTotalAmount(stat.getTotalAmount()); // 商品累计总营业额
+            result.add(dto);
         }
-        // 取最新日期的总营业额
-        SalesStatistics latest = latestStats.get(latestStats.size() - 1);
-        return Result.suc(latest.getTotalAmount());
+
+        return Result.suc(result);
     }
 }

@@ -33,6 +33,13 @@ public interface SalesStatisticsRepository extends JpaRepository<SalesStatistics
             @Param("shopId") Long shopId,
             @Param("date") LocalDate date);
 
+    @Query("SELECT s FROM sales_statistics s " +
+            "WHERE s.shop.id = :shopId " +
+            "AND s.product IS NOT NULL " +
+            "AND s.statDate = (SELECT MAX(s2.statDate) FROM sales_statistics s2 " +
+            "                  WHERE s2.product.id = s.product.id " +
+            "                  AND s2.shop.id = :shopId)")
+    List<SalesStatistics> findLatestProductStatsByShopId(@Param("shopId") Long shopId);
     // 按店铺查询商品每日统计
     List<SalesStatistics> findByShopIdAndProductIsNotNullAndStatDateBetween(
             Long shopId, LocalDate start, LocalDate end);
