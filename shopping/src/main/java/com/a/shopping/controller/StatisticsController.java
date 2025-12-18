@@ -65,7 +65,7 @@ public class StatisticsController {
     @GetMapping("/shop/total")
     public Result getShopTotal(@RequestParam Long shopId) {
         // 总营业额为最新统计记录的totalAmount（商品为null的店铺维度）
-        Optional<BigDecimal> latestStat = statisticsRepository.sumTotalByShopIdBeforeDateAndProductIsNull(shopId, LocalDate.now());
+        Optional<BigDecimal> latestStat = statisticsRepository.sumTotalByShopIdBeforeDateAndProductIsNull(shopId, LocalDate.now().plusDays(1));
         return Result.suc(latestStat);
     }
     /**

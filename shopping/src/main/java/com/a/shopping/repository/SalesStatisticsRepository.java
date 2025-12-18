@@ -27,7 +27,7 @@ public interface SalesStatisticsRepository extends JpaRepository<SalesStatistics
             @Param("date") LocalDate date);
 
     // 查询店铺历史总营业额（指定日期之前，商品为null）
-    @Query("SELECT SUM(s.totalAmount) FROM sales_statistics s " +
+    @Query("SELECT SUM(s.dailyAmount) FROM sales_statistics s " +
             "WHERE s.shop.id = :shopId AND s.product IS NULL AND s.statDate < :date")
     Optional<BigDecimal> sumTotalByShopIdBeforeDateAndProductIsNull(
             @Param("shopId") Long shopId,
