@@ -1,5 +1,6 @@
 package com.a.shopping.controller;
 
+import com.a.shopping.entity.Product;
 import com.a.shopping.entity.ProductComment;
 import com.a.shopping.entity.ProductCommentDTO;
 import com.a.shopping.entity.Result;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/productComment")
@@ -28,6 +30,11 @@ public class ProductCommentController {
         productComment.setUser(userRepository.findById(productCommentDTO.getUserId()).get());
         productComment.setScore(productCommentDTO.getScore());
         ProductComment productComment1=productCommentRepository.save(productComment);
+        Optional<Product> product=productRepository.findById(productCommentDTO.getProductId());
+        List<ProductComment> productComments = productCommentRepository.findByProductId(productCommentDTO.getProductId());
+        Double sum= (double) productComments.size();
+        product.get().setScore(productComments.stream().mapToDouble(ProductComment::getScore).sum()/sum);
+        productRepository.save(product.get());
         return productComment1!=null?Result.suc():Result.fail();
     }
     @GetMapping("/list/{productId}")
