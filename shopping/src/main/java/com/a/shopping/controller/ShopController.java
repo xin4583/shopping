@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/shop")
@@ -70,6 +71,15 @@ public class ShopController {
         List<Shop> shops = shopRepository.findByUserId(userId);
         if (shops == null || shops.isEmpty()) {
             return Result.fail("该用户暂无店铺信息");
+        }
+        return Result.suc(shops);
+    }
+    @GetMapping("/listByShopId/{shopId}")
+    public Result getShopsByShopId(@PathVariable Long shopId) {
+        // 根据用户ID查询店铺列表
+        Optional<Shop> shops = shopRepository.findById(shopId);
+        if (shops == null || shops.isEmpty()) {
+            return Result.fail("招不到该店铺");
         }
         return Result.suc(shops);
     }
