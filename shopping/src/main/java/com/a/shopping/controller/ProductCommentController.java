@@ -33,7 +33,11 @@ public class ProductCommentController {
         Optional<Product> product=productRepository.findById(productCommentDTO.getProductId());
         List<ProductComment> productComments = productCommentRepository.findByProductId(productCommentDTO.getProductId());
         Double sum= (double) productComments.size();
-        product.get().setScore(productComments.stream().mapToDouble(ProductComment::getScore).sum()/sum);
+        double totalScore = productComments.stream().mapToDouble(ProductComment::getScore).sum();
+        int commentCount = productComments.size();
+        double averageScore = commentCount > 0 ? totalScore / commentCount : 0.0;
+        averageScore = Math.round(averageScore * 10) / 10.0;
+        product.get().setScore(averageScore);
         productRepository.save(product.get());
         return productComment1!=null?Result.suc():Result.fail();
     }
