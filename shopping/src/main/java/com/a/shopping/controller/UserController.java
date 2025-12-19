@@ -44,7 +44,8 @@ public class UserController {
     }
     @PostMapping("/login")
     public Result login(@RequestBody UserDTO loginDto) {
-
+        User user=userRepository.findByPhone(loginDto.getPhone());
+        loginDto.setRole(user.getRole());
         return loginService.login(loginDto);
     }
     @GetMapping("/list/{id}")
