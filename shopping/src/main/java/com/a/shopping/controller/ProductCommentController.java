@@ -32,7 +32,7 @@ public class ProductCommentController {
         ProductComment productComment1=productCommentRepository.save(productComment);
         Optional<Product> product=productRepository.findById(productCommentDTO.getProductId());
         List<ProductComment> productComments = productCommentRepository.findByProductId(productCommentDTO.getProductId());
-        Double sum= (double) productComments.size();
+        // Double sum= (double) productComments.size();
         double totalScore = productComments.stream().mapToDouble(ProductComment::getScore).sum();
         int commentCount = productComments.size();
         double averageScore = commentCount > 0 ? totalScore / commentCount : 0.0;
@@ -61,7 +61,16 @@ public class ProductCommentController {
     }
     @DeleteMapping("/delete/{id}")
     public Result delete(@PathVariable Long id) {
+        Optional<Product> product=productRepository.findById(productCommentRepository.findById(id).get().getProduct().getId());
         productCommentRepository.deleteById(id);
+        List<ProductComment> productComments = productCommentRepository.findByProductId(product.get().getId());
+        // Double sum= (double) productComments.size();
+        double totalScore = productComments.stream().mapToDouble(ProductComment::getScore).sum();
+        int commentCount = productComments.size();
+        double averageScore = commentCount > 0 ? totalScore / commentCount : 0.0;
+        averageScore = Math.round(averageScore * 10) / 10.0;
+        product.get().setScore(averageScore);
+        productRepository.save(product.get());
         return productCommentRepository.existsById(id)?Result.fail():Result.suc();
     }
 
