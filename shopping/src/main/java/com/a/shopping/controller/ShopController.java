@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -81,6 +83,13 @@ public class ShopController {
     }
     @PostMapping("/listAll")
     public Result listAll(@RequestBody QueryPageParam queryPageParam) {
+        Map<String, Object> param = queryPageParam.getParam();
+        String name = param.get("name") != null ? param.get("name").toString() : null;
+        String nameLike = name != null ? "%" + name + "%" : null;
+        Integer status = param.get("status") != null ? Integer.parseInt(param.get("status").toString()) : null;
+        LocalDateTime startTime = param.get("startTime") != null ? LocalDateTime.parse(param.get("startTime").toString()) : null;
+        LocalDateTime endTime = param.get("endTime") != null ? LocalDateTime.parse(param.get("endTime").toString()) : null;
+
         // 构建分页参数
         Pageable pageable = PageRequest.of(
                 queryPageParam.getPageNum() - 1,
@@ -88,9 +97,13 @@ public class ShopController {
                 Sort.Direction.ASC, "id"  // 按ID升序排序
         );
 
-        // 执行分页查询
-        Page<Shop> shopPage = shopRepository.findAll(pageable);
-
+        Page<Shop> shopPage = shopRepository.findByCondition(
+                nameLike,
+                status,
+                startTime,
+                endTime,
+                pageable
+        );
         // 返回分页结果
         return Result.suc(shopPage.getContent(), shopPage.getTotalElements());
     }
