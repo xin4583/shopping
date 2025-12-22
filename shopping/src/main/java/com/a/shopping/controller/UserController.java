@@ -1,5 +1,6 @@
 package com.a.shopping.controller;
 
+import com.a.shopping.configure.QueryPageParam;
 import com.a.shopping.entity.Result;
 import com.a.shopping.entity.User;
 import com.a.shopping.entity.UserAddress;
@@ -9,6 +10,10 @@ import com.a.shopping.service.LoginService;
 import com.a.shopping.service.RegisterService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -77,9 +82,19 @@ public class UserController {
         return Result.suc();
     }
     @GetMapping("/listAll")
-    public Result list(){
-        List<User> user =  userRepository.findAll();
-        return Result.suc(user);
+    public Result listAll(@RequestBody QueryPageParam queryPageParam) {
+        // 构建分页参数（页码从0开始，需减1）
+        Pageable pageable = PageRequest.of(
+                queryPageParam.getPageNum() - 1,
+                queryPageParam.getPageSize(),
+                Sort.Direction.ASC, "id"  // 按ID升序排序，可根据需要调整
+        );
+
+        // 执行分页查询
+        Page<User> userPage = userRepository.findAll(pageable);
+
+        // 返回分页结果（包含数据和总条数）
+        return Result.suc(userPage.getContent(), userPage.getTotalElements());
     }
     @PostMapping("/update/{id}")
     public Result update(@PathVariable Long id, @RequestBody UserDTO dto){

@@ -1,5 +1,6 @@
 package com.a.shopping.controller;
 
+import com.a.shopping.configure.QueryPageParam;
 import com.a.shopping.entity.Result;
 import com.a.shopping.entity.Shop;
 import com.a.shopping.entity.ShopCreateDTO;
@@ -7,6 +8,10 @@ import com.a.shopping.entity.ShopUpdateDTO;
 import com.a.shopping.repository.ShopRepository;
 import com.a.shopping.service.ShopService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -75,9 +80,19 @@ public class ShopController {
         return Result.suc(shops);
     }
     @GetMapping("/listAll")
-    public Result listAll() {
-        List<Shop> shops = shopRepository.findAll();
-        return Result.suc(shops);
+    public Result listAll(@RequestBody QueryPageParam queryPageParam) {
+        // 构建分页参数
+        Pageable pageable = PageRequest.of(
+                queryPageParam.getPageNum() - 1,
+                queryPageParam.getPageSize(),
+                Sort.Direction.ASC, "id"  // 按ID升序排序
+        );
+
+        // 执行分页查询
+        Page<Shop> shopPage = shopRepository.findAll(pageable);
+
+        // 返回分页结果
+        return Result.suc(shopPage.getContent(), shopPage.getTotalElements());
     }
     @GetMapping("/listByShopId/{shopId}")
     public Result getShopsByShopId(@PathVariable Long shopId) {
