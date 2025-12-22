@@ -46,6 +46,7 @@ public class UserController {
     public Result login(@RequestBody UserDTO loginDto) {
         User user=userRepository.findByPhone(loginDto.getPhone());
         loginDto.setRole(user.getRole());
+        loginDto.setStatus(user.getStatus());
         return loginService.login(loginDto);
     }
     @GetMapping("/list/{id}")
@@ -75,6 +76,11 @@ public class UserController {
         userRepository.deleteById(id);
         return Result.suc();
     }
+    @GetMapping("/listAll")
+    public Result list(){
+        List<User> user =  userRepository.findAll();
+        return Result.suc(user);
+    }
     @PostMapping("/update/{id}")
     public Result update(@PathVariable Long id, @RequestBody UserDTO dto){
         User user = userRepository.findById(id).orElse(null);
@@ -85,6 +91,7 @@ public class UserController {
         user.setPhone(dto.getPhone());
         user.setEmail(dto.getEmail());
         user.setPassword(dto.getPassword());
+        user.setStatus(dto.getStatus());
         User saveuser=userRepository.save(user);
         return saveuser!=user?Result.fail("更新失败"):Result.suc();
     }

@@ -29,6 +29,7 @@ public class User {
     private Integer role=0; // 0-用户/商家，1-管理员
     @Column(name = "create_time",nullable = false)
     private LocalDateTime createTime; // 创建时间
+    private Integer status=0; // 0-正常，1-禁用
     // 一个用户有多个地址
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

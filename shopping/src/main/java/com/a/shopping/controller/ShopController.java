@@ -74,6 +74,11 @@ public class ShopController {
         }
         return Result.suc(shops);
     }
+    @GetMapping("/listAll")
+    public Result listAll() {
+        List<Shop> shops = shopRepository.findAll();
+        return Result.suc(shops);
+    }
     @GetMapping("/listByShopId/{shopId}")
     public Result getShopsByShopId(@PathVariable Long shopId) {
         // 根据用户ID查询店铺列表
