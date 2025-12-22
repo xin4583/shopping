@@ -27,6 +27,7 @@ public class RegisterService {
         user.setEmail(userDto.getEmail());
         user.setPassword(userDto.getPassword());
         user.setAvatar(avatar.getBytes());
+        user.setRole(userDto.getRole());
         userRepository.save(user);
         return Result.suc();
     }
