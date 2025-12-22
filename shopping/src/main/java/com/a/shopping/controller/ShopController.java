@@ -79,7 +79,7 @@ public class ShopController {
         }
         return Result.suc(shops);
     }
-    @GetMapping("/listAll")
+    @PostMapping("/listAll")
     public Result listAll(@RequestBody QueryPageParam queryPageParam) {
         // 构建分页参数
         Pageable pageable = PageRequest.of(

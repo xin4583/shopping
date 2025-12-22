@@ -14,15 +14,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.*;
@@ -81,18 +81,29 @@ public class UserController {
         userRepository.deleteById(id);
         return Result.suc();
     }
-    @GetMapping("/listAll")
+    @PostMapping("/listAll")
     public Result listAll(@RequestBody QueryPageParam queryPageParam) {
+        Map<String, Object> param = queryPageParam.getParam();
+        String username = param.get("username") != null ? param.get("username").toString() : null;
+        String usernameLike = username != null ? "%" + username + "%" : null;
+        String phone = param.get("phone") != null ? param.get("phone").toString() : null;
+        Integer status = param.get("status") != null ? Integer.parseInt(param.get("status").toString()) : null;
+        LocalDateTime startTime = param.get("startTime") != null ? LocalDateTime.parse(param.get("startTime").toString()) : null;
+        LocalDateTime endTime = param.get("endTime") != null ? LocalDateTime.parse(param.get("endTime").toString()) : null;
         // 构建分页参数（页码从0开始，需减1）
         Pageable pageable = PageRequest.of(
                 queryPageParam.getPageNum() - 1,
                 queryPageParam.getPageSize(),
                 Sort.Direction.ASC, "id"  // 按ID升序排序，可根据需要调整
         );
-
-        // 执行分页查询
-        Page<User> userPage = userRepository.findAll(pageable);
-
+        Page<User> userPage = userRepository.findByCondition(
+                usernameLike,
+                phone,
+                status,
+                startTime,
+                endTime,
+                pageable
+        );
         // 返回分页结果（包含数据和总条数）
         return Result.suc(userPage.getContent(), userPage.getTotalElements());
     }
