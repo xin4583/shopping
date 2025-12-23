@@ -15,8 +15,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/product")
@@ -209,5 +212,67 @@ public class ProductController {
             dto.setSkus(product.getSkus() != null ? product.getSkus() : new ArrayList<>());
             return dto;
         });
+    }
+    @PostMapping("/admin/listAll")
+    public Result listAll(@RequestBody QueryPageParam queryPageParam) {
+        Map<String, Object> param = queryPageParam.getParam();
+        // 提取查询参数
+        String productName = param.get("productName") != null ? param.get("productName").toString() : null;
+        String productNameLike = productName != null ? "%" + productName + "%" : null;
+
+        String shopName = param.get("shopName") != null ? param.get("shopName").toString() : null;
+        String shopNameLike = shopName != null ? "%" + shopName + "%" : null;
+
+        Long categoryId = param.get("categoryId") != null ? Long.parseLong(param.get("categoryId").toString()) : null;
+        Integer status = param.get("status") != null ? Integer.parseInt(param.get("status").toString()) : null;
+
+        // 构建分页参数
+        Pageable pageable = PageRequest.of(
+                queryPageParam.getPageNum() - 1,
+                queryPageParam.getPageSize(),
+                Sort.Direction.ASC, "id"  // 按ID升序排序
+        );
+
+        // 执行带条件的分页查询（需要在ProductRepository中添加对应方法）
+        Page<Product> productPage = productRepository.findByMultiCondition(
+                productNameLike,
+                shopNameLike,
+                categoryId,
+                status,
+                pageable
+        );
+
+        // 转换为DTO列表（复用已有的ProductListDTO转换逻辑）
+        List<ProductListDTO> productListDTOS = productPage.getContent().stream()
+                .map(product -> {
+                    ProductListDTO dto = new ProductListDTO();
+                    // 商品基础字段
+                    dto.setId(product.getId());
+                    dto.setName(product.getName());
+                    dto.setSubtitle(product.getSubtitle());
+                    dto.setPrice(product.getPrice());
+                    dto.setStock(product.getStock());
+                    dto.setSales(product.getSales());
+                    dto.setStatus(product.getStatus());
+                    dto.setCreateTime(product.getCreateTime());
+                    // 店铺相关字段
+                    if (product.getShop() != null) {
+                        dto.setShopId(product.getShop().getId());
+                        dto.setShopName(product.getShop().getName());
+                        dto.setShopLogo(product.getShop().getLogo());
+                    }
+                    // 分类ID
+                    dto.setCategoryId(product.getCategory() != null ? product.getCategory().getId() : null);
+                    // 商品主图
+                    if (product.getImages() != null && !product.getImages().isEmpty()) {
+                        dto.setProductImg(product.getImages().get(0).getImage());
+                    }
+                    // SKU列表
+                    dto.setSkus(product.getSkus() != null ? product.getSkus() : new ArrayList<>());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+        // 返回分页结果
+        return Result.suc(productListDTOS, productPage.getTotalElements());
     }
 }
