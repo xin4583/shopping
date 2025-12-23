@@ -7,10 +7,7 @@ import com.a.shopping.repository.ProductImageRepository;
 import com.a.shopping.repository.ProductRepository;
 import com.a.shopping.repository.ShopRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
@@ -131,39 +129,41 @@ public class ProductController {
         // 3. 执行关联分页查询（避免懒加载）
         Page<Product> productPage = productRepository.findByNameLikeAndStatusWithRelations(fuzzyName, status, pageable);
         // 4. 将 Page<Product> 转换为 Page<ProductListDTO>（核心映射逻辑）
-        Page<ProductListDTO> productListDTOPage = productPage.map(product -> {
-            if(product.getShop().getStatus()!=1){
-                return null;
-            }
-            ProductListDTO dto = new ProductListDTO();
-            // 商品基础字段（与list1一致）
-            dto.setId(product.getId());
-            dto.setName(product.getName());
-            dto.setSubtitle(product.getSubtitle());
-            dto.setPrice(product.getPrice());
-            dto.setStock(product.getStock());
-            dto.setSales(product.getSales());
-            dto.setStatus(product.getStatus());
-            dto.setCreateTime(product.getCreateTime());
-            // 店铺相关字段（与list1一致）
-            if (product.getShop() != null) {
-                dto.setShopId(product.getShop().getId());
-                dto.setShopName(product.getShop().getName());
-                dto.setShopLogo(product.getShop().getLogo()); // 二进制logo
-            }
-            // 分类ID（与list1一致，取category的id）
-            dto.setCategoryId(product.getCategory() != null ? product.getCategory().getId() : null);
+        List<ProductListDTO> dtoList = productPage.stream()
+                .map(product -> {
+                    if (product.getShop() == null || product.getShop().getStatus() != 1) {
+                        return null;
+                    }
+                    ProductListDTO dto = new ProductListDTO();
+                    // 商品基础字段（与原逻辑一致）
+                    dto.setId(product.getId());
+                    dto.setName(product.getName());
+                    dto.setSubtitle(product.getSubtitle());
+                    dto.setPrice(product.getPrice());
+                    dto.setStock(product.getStock());
+                    dto.setSales(product.getSales());
+                    dto.setStatus(product.getStatus());
+                    dto.setCreateTime(product.getCreateTime());
+                    // 店铺相关字段（与原逻辑一致）
+                    dto.setShopId(product.getShop().getId());
+                    dto.setShopName(product.getShop().getName());
+                    dto.setShopLogo(product.getShop().getLogo());
+                    // 分类ID（与原逻辑一致）
+                    dto.setCategoryId(product.getCategory() != null ? product.getCategory().getId() : null);
+                    // 商品主图（与原逻辑一致）
+                    if (product.getImages() != null && !product.getImages().isEmpty()) {
+                        dto.setProductImg(product.getImages().get(0).getImage());
+                    }
+                    // SKU列表（与原逻辑一致）
+                    dto.setSkus(product.getSkus() != null ? product.getSkus() : new ArrayList<>());
+                    return dto;
+                })
+                .filter(Objects::nonNull) // 关键修改：过滤掉所有null值，避免存入结果
+                .collect(Collectors.toList());
 
-            // 商品主图（取第一张图片的image字段，与list1一致）
-            if (product.getImages() != null && !product.getImages().isEmpty()) {
-                dto.setProductImg(product.getImages().get(0).getImage()); // 第一张图的二进制数据
-            }
-            // SKU列表（与list1一致，直接赋值）
-            dto.setSkus(product.getSkus() != null ? product.getSkus() : new ArrayList<>());
-            return dto;
-        });
-        // 5. 返回DTO分页结果（格式与list1完全一致）
-        return productListDTOPage;
+        // 5. 构建新的分页对象（原逻辑直接返回包含null的Page）
+        // 改为用过滤后的列表重新构建Page，确保结果中无null
+        return new PageImpl<>(dtoList, pageable, productPage.getTotalElements());
     }
     @PostMapping("/listByShop/{shopId}")
     public Page<ProductListDTO> listByShopId(
