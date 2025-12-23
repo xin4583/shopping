@@ -129,8 +129,10 @@ public class ProductController {
         Page<Product> productPage = productRepository.findByNameLikeAndStatusWithRelations(fuzzyName, status, pageable);
         // 4. 将 Page<Product> 转换为 Page<ProductListDTO>（核心映射逻辑）
         Page<ProductListDTO> productListDTOPage = productPage.map(product -> {
+            if(product.getShop().getStatus()!=1){
+                return null;
+            }
             ProductListDTO dto = new ProductListDTO();
-
             // 商品基础字段（与list1一致）
             dto.setId(product.getId());
             dto.setName(product.getName());
@@ -164,7 +166,6 @@ public class ProductController {
     public Page<ProductListDTO> listByShopId(
             @PathVariable Long shopId,
             @RequestBody QueryPageParam queryPageParam) {
-
         // 1. 验证店铺是否存在
         if (!shopRepository.existsById(shopId)) {
             throw new RuntimeException("店铺不存在"); // 实际项目中建议使用自定义异常并全局处理
