@@ -34,7 +34,7 @@ public class Product {
     private Integer stock=0; // 库存
     private Integer sales=0; // 销量
     private Double score;
-    private Integer status=0; // 0-待审核，1-下架,2-上架
+    private Integer status=0; // 0-待审核，1-下架,2- 上架
     @Column(name = "create_time")
     private LocalDateTime createTime;
     // 一个商品有多个图片（一对多）
