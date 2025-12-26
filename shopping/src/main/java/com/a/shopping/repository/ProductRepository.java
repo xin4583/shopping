@@ -52,4 +52,14 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("categoryId") Long categoryId,
             @Param("status") Integer status,
             Pageable pageable);
+    @Query("SELECT p FROM product p " +
+            "LEFT JOIN p.shop " +
+            "LEFT JOIN p.images " +
+            "WHERE (:name IS NULL OR p.name LIKE :name) " +
+            "AND (:status IS NULL OR p.status = :status) " +
+            "ORDER BY FUNCTION('RAND')") // 关键：移除 RAND 后的括号
+    Page<Product> findRandomProducts(
+            @Param("name") String name,
+            @Param("status") Integer status,
+            Pageable pageable);
 }

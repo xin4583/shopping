@@ -275,4 +275,57 @@ public class ProductController {
         // 返回分页结果
         return Result.suc(productListDTOS, productPage.getTotalElements());
     }
+    @PostMapping("/homePageList")
+    public Page<ProductListDTO> homePageList(@RequestBody QueryPageParam queryPageParam) {
+        // 处理查询参数（同现有逻辑，支持按名称模糊查询和状态筛选）
+        String name = (String) queryPageParam.getParam().get("name");
+        String fuzzyName = "%" + (name == null ? "" : name) + "%";
+        Integer status = (Integer) queryPageParam.getParam().get("status");
+
+        // 构建分页参数（不指定排序，后续在查询中使用随机排序）
+        Pageable pageable = PageRequest.of(
+                queryPageParam.getPageNum() - 1,
+                queryPageParam.getPageSize()
+        );
+
+        // 执行随机排序的分页查询（使用JPQL的FUNCTION函数调用数据库随机函数）
+        Page<Product> productPage = productRepository.findRandomProducts(fuzzyName, status, pageable);
+
+        // 转换为ProductListDTO（复用现有映射逻辑）
+        List<ProductListDTO> dtoList = productPage.stream()
+                .map(product -> {
+                    // 过滤掉店铺不存在或店铺状态非1的商品
+                    if (product.getShop() == null || product.getShop().getStatus() != 1) {
+                        return null;
+                    }
+                    ProductListDTO dto = new ProductListDTO();
+                    // 商品基础字段映射
+                    dto.setId(product.getId());
+                    dto.setName(product.getName());
+                    dto.setSubtitle(product.getSubtitle());
+                    dto.setPrice(product.getPrice());
+                    dto.setStock(product.getStock());
+                    dto.setSales(product.getSales());
+                    dto.setStatus(product.getStatus());
+                    dto.setCreateTime(product.getCreateTime());
+                    // 店铺相关字段映射
+                    dto.setShopId(product.getShop().getId());
+                    dto.setShopName(product.getShop().getName());
+                    dto.setShopLogo(product.getShop().getLogo());
+                    // 分类ID映射
+                    dto.setCategoryId(product.getCategory() != null ? product.getCategory().getId() : null);
+                    // 商品主图映射
+                    if (product.getImages() != null && !product.getImages().isEmpty()) {
+                        dto.setProductImg(product.getImages().get(0).getImage());
+                    }
+                    // SKU列表映射
+                    dto.setSkus(product.getSkus() != null ? product.getSkus() : new ArrayList<>());
+                    return dto;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        // 构建返回的分页对象
+        return new PageImpl<>(dtoList, pageable, productPage.getTotalElements());
+    }
 }
