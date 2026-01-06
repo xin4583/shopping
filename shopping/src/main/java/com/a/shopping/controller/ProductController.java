@@ -6,6 +6,7 @@ import com.a.shopping.repository.ProductCategoryRepository;
 import com.a.shopping.repository.ProductImageRepository;
 import com.a.shopping.repository.ProductRepository;
 import com.a.shopping.repository.ShopRepository;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
 import org.springframework.web.bind.annotation.*;
@@ -88,7 +89,7 @@ public class ProductController {
         productRepository.deleteById(id);
         return Result.suc();
     }
-
+    // 商品详情接口（支持图片和SKU信息）
     @GetMapping("/list1/{ID}")
     public Result list1(@PathVariable Long ID) {
         Product product = productRepository.findById(ID).orElse(null);
@@ -114,6 +115,7 @@ public class ProductController {
         productDTO.setScore(product.getScore());
         return Result.suc(productDTO);
     }
+    // 商品列表接口，支持分页、模糊查询和状态筛选
     @PostMapping("/ListPage")
     public Page<ProductListDTO> searchPage(@RequestBody QueryPageParam queryPageParam) {
         // 1. 处理查询参数
@@ -165,6 +167,7 @@ public class ProductController {
         // 改为用过滤后的列表重新构建Page，确保结果中无null
         return new PageImpl<>(dtoList, pageable, productPage.getTotalElements());
     }
+    // 店铺商品列表接口，用于前端展示店铺内所有上架的商品
     @PostMapping("/listByShop/{shopId}")
     public Page<ProductListDTO> listByShopId(
             @PathVariable Long shopId,
@@ -213,6 +216,7 @@ public class ProductController {
             return dto;
         });
     }
+    // 商品管理列表接口，支持多条件查询（商品名称、店铺名称、分类ID和状态）
     @PostMapping("/admin/listAll")
     public Result listAll(@RequestBody QueryPageParam queryPageParam) {
         Map<String, Object> param = queryPageParam.getParam();
@@ -275,6 +279,7 @@ public class ProductController {
         // 返回分页结果
         return Result.suc(productListDTOS, productPage.getTotalElements());
     }
+    // 首页商品列表接口，用于展示随机上架的商品（支持按名称模糊查询和状态筛选）
     @PostMapping("/homePageList")
     public Page<ProductListDTO> homePageList(@RequestBody QueryPageParam queryPageParam) {
         // 处理查询参数（同现有逻辑，支持按名称模糊查询和状态筛选）
@@ -327,5 +332,124 @@ public class ProductController {
 
         // 构建返回的分页对象
         return new PageImpl<>(dtoList, pageable, productPage.getTotalElements());
+    }
+    // 根据父分类ID分页查询商品接口（支持关联店铺、分类、图片和SKU信息）
+    @PostMapping("/listByParentCategoryPage")
+    public Page<ProductListDTO> listByParentCategoryPage(@RequestBody QueryPageParam queryPageParam) {
+        // 1. 处理查询参数（从请求参数中获取父分类ID）
+        Integer parentCategoryId = (Integer) queryPageParam.getParam().get("parentCategoryId");
+
+        // 2. 构建分页参数（与参考接口保持一致：页码从1转0、默认按ID升序）
+        Pageable pageable = PageRequest.of(
+                queryPageParam.getPageNum() - 1,
+                queryPageParam.getPageSize(),
+                Sort.Direction.ASC, "id"
+        );
+
+        // 3. 执行关联分页查询（需在ProductRepository中实现该方法）
+        // 核心：查询父分类ID匹配的商品，同时关联查询店铺、分类、图片、SKU（避免懒加载）
+        Page<Product> productPage = productRepository.findByCategoryParentIdWithRelations(parentCategoryId, pageable);
+
+        // 4. 将 Page<Product> 转换为 Page<ProductListDTO>（与参考接口逻辑完全一致）
+        List<ProductListDTO> dtoList = productPage.stream()
+                .map(product -> {
+                    // 过滤掉店铺不存在或店铺状态非1的商品
+                    if (product.getShop() == null || product.getShop().getStatus() != 1) {
+                        return null;
+                    }
+                    ProductListDTO dto = new ProductListDTO();
+                    // 商品基础字段
+                    dto.setId(product.getId());
+                    dto.setName(product.getName());
+                    dto.setSubtitle(product.getSubtitle());
+                    dto.setPrice(product.getPrice());
+                    dto.setStock(product.getStock());
+                    dto.setSales(product.getSales());
+                    dto.setStatus(product.getStatus());
+                    dto.setCreateTime(product.getCreateTime());
+                    // 店铺相关字段
+                    dto.setShopId(product.getShop().getId());
+                    dto.setShopName(product.getShop().getName());
+                    dto.setShopLogo(product.getShop().getLogo());
+                    // 分类ID（子分类ID）
+                    dto.setCategoryId(product.getCategory() != null ? product.getCategory().getId() : null);
+                    // 商品主图
+                    if (product.getImages() != null && !product.getImages().isEmpty()) {
+                        dto.setProductImg(product.getImages().get(0).getImage());
+                    }
+                    // SKU列表
+                    dto.setSkus(product.getSkus() != null ? product.getSkus() : new ArrayList<>());
+                    return dto;
+                })
+                .filter(Objects::nonNull) // 过滤掉所有null值（无效商品）
+                .collect(Collectors.toList());
+
+        // 5. 构建过滤后的分页对象（确保返回结果无null）
+        return new PageImpl<>(dtoList, pageable, productPage.getTotalElements());
+    }
+    // 按销量从高到低排序查询前4个商品
+    @GetMapping("/latest-four")
+    public Result listLatestFourProducts() {
+        List<Product> latestProducts = productRepository.findTop4ByOrderByCreateTimeDesc();
+        List<ProductListDTO> dtoList = convertToProductListDTO(latestProducts);
+        if (latestProducts.isEmpty()) {
+            return Result.suc("暂无商品数据", dtoList);
+        }
+        return Result.suc("查询最新创建的4个商品成功", dtoList);
+    }
+
+    // 按销量从高到低排序查询前4个商品
+    @GetMapping("/top-sales-four")
+    public Result listTopSalesFourProducts() {
+        List<Product> topSalesProducts = productRepository.findTop4ByOrderBySalesDesc();
+        List<ProductListDTO> dtoList = convertToProductListDTO(topSalesProducts);
+        if (topSalesProducts.isEmpty()) {
+            return Result.suc("暂无商品数据", dtoList);
+        }
+        return Result.suc("查询销量前4的商品成功", dtoList);
+    }
+    private List<ProductListDTO> convertToProductListDTO(List<Product> productList, boolean filterInvalidShop) {
+        if (productList == null || productList.isEmpty()) {
+            return List.of();
+        }
+
+        return productList.stream()
+                .filter(product -> {
+                    if (!filterInvalidShop) {
+                        return true;
+                    }
+                    return product.getShop() != null && product.getShop().getStatus() == 1;
+                })
+                .map(product -> {
+                    ProductListDTO dto = new ProductListDTO();
+                    BeanUtils.copyProperties(product, dto);
+
+                    // 1. 店铺字段（已通过JOIN FETCH确保非null）
+                    if (product.getShop() != null) {
+                        dto.setShopId(product.getShop().getId());
+                        dto.setShopName(product.getShop().getName());
+                        dto.setShopLogo(product.getShop().getLogo());
+                    }
+
+                    // 2. 分类ID
+                    dto.setCategoryId(product.getCategory() != null ? product.getCategory().getId() : null);
+
+                    // 3. 商品主图（无图设为空字符串）
+                    if (product.getImages() != null && !product.getImages().isEmpty()) {
+                        dto.setProductImg(product.getImages().get(0).getImage());
+                    }
+                    // 4. SKU列表（空列表兜底）
+                    dto.setSkus(product.getSkus() != null ? product.getSkus() : new ArrayList<>());
+                    // 5. 评分默认值（0.0）
+                    dto.setScore(product.getScore() != null ? product.getScore() : 0.0);
+                    return dto;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    // 重载方法（默认过滤无效店铺）
+    private List<ProductListDTO> convertToProductListDTO(List<Product> productList) {
+        return convertToProductListDTO(productList, true);
     }
 }

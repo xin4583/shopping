@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> findAll(Pageable pageable);
     Page<Product> findByNameLike(Pageable pageable, String fuzzyName);
@@ -62,4 +64,28 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("name") String name,
             @Param("status") Integer status,
             Pageable pageable);
+    @Query("SELECT p FROM product p " +
+            "LEFT JOIN FETCH p.shop s " +  // 只Fetch店铺（核心关联）
+            "LEFT JOIN FETCH p.category c " + // 只Fetch分类（核心关联）
+            "WHERE c.parentId = :parentCategoryId")
+    Page<Product> findByCategoryParentIdWithRelations(
+            @Param("parentCategoryId") Integer parentCategoryId,
+            Pageable pageable
+    );
+    @Query("SELECT p FROM product p " +
+            "JOIN FETCH p.shop s " +          // 强制加载店铺
+            "JOIN FETCH p.category c " +      // 强制加载分类
+            "LEFT JOIN FETCH p.images i " +   // 左连接加载商品图片（允许无图片）
+            "WHERE s.status = 1 " +           // 过滤有效店铺
+            "ORDER BY p.sales DESC")
+    List<Product> findTop4ByOrderBySalesDesc();
+
+    // 同理，最新4个商品的查询方法也要加JOIN FETCH：
+    @Query("SELECT p FROM product p " +
+            "JOIN FETCH p.shop s " +
+            "JOIN FETCH p.category c " +
+            "LEFT JOIN FETCH p.images i " +
+            "WHERE s.status = 1 " +
+            "ORDER BY p.createTime DESC")
+    List<Product> findTop4ByOrderByCreateTimeDesc();
 }

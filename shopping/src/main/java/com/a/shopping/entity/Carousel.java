@@ -5,6 +5,7 @@ import lombok.Data;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity(name = "carousel")
@@ -29,6 +30,9 @@ public class Carousel {
 
     @Column(name = "update_time")
     private LocalDateTime updateTime;
+
+    @JoinColumn(name = "product_id")
+    private Long productId;
 
     @PrePersist
     public void prePersist() {
