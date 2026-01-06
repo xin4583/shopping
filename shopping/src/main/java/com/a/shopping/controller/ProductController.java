@@ -183,9 +183,9 @@ public class ProductController {
                 queryPageParam.getPageSize(),
                 Sort.Direction.ASC, "id"
         );
-
+        Integer targetStatus = 2;
         // 3. 执行分页查询（关联查询避免懒加载问题）
-        Page<Product> productPage = productRepository.findByShopIdWithRelations(shopId, pageable);
+        Page<Product> productPage = productRepository.findByShopIdAndStatusWithRelations(shopId,targetStatus, pageable);
 
         // 4. 转换为ProductListDTO（复用已有的映射逻辑）
         return productPage.map(product -> {
@@ -285,7 +285,7 @@ public class ProductController {
         // 处理查询参数（同现有逻辑，支持按名称模糊查询和状态筛选）
         String name = (String) queryPageParam.getParam().get("name");
         String fuzzyName = "%" + (name == null ? "" : name) + "%";
-        Integer status = (Integer) queryPageParam.getParam().get("status");
+        Integer status = 2;
 
         // 构建分页参数（不指定排序，后续在查询中使用随机排序）
         Pageable pageable = PageRequest.of(
@@ -390,8 +390,12 @@ public class ProductController {
     // 按销量从高到低排序查询前4个商品
     @GetMapping("/latest-four")
     public Result listLatestFourProducts() {
-        List<Product> latestProducts = productRepository.findTop4ByOrderByCreateTimeDesc();
-        List<ProductListDTO> dtoList = convertToProductListDTO(latestProducts);
+        Integer status = 2; // 只查询上架商品
+        List<Product> latestProducts = productRepository.findTop4ByStatusOrderByCreateTimeDesc(status);
+        List<Product> filteredProducts = latestProducts.stream()
+                .limit(4) // 强制限制条数
+                .collect(Collectors.toList());
+        List<ProductListDTO> dtoList = convertToProductListDTO(filteredProducts);
         if (latestProducts.isEmpty()) {
             return Result.suc("暂无商品数据", dtoList);
         }
@@ -401,8 +405,12 @@ public class ProductController {
     // 按销量从高到低排序查询前4个商品
     @GetMapping("/top-sales-four")
     public Result listTopSalesFourProducts() {
-        List<Product> topSalesProducts = productRepository.findTop4ByOrderBySalesDesc();
-        List<ProductListDTO> dtoList = convertToProductListDTO(topSalesProducts);
+        Integer status = 2;
+        List<Product> topSalesProducts = productRepository.findTop4ByStatusOrderBySalesDesc(status);
+        List<Product> filteredProducts = topSalesProducts.stream()
+                .limit(4)
+                .collect(Collectors.toList());
+        List<ProductListDTO> dtoList = convertToProductListDTO(filteredProducts);
         if (topSalesProducts.isEmpty()) {
             return Result.suc("暂无商品数据", dtoList);
         }

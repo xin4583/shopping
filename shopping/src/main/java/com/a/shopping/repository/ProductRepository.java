@@ -30,9 +30,13 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             "JOIN FETCH p.shop s " +
             "JOIN FETCH p.category c " +
             "LEFT JOIN FETCH p.images i " +
-            "WHERE p.shop.id = :shopId",
-            countQuery = "SELECT COUNT(p) FROM product p WHERE p.shop.id = :shopId")
-    Page<Product> findByShopIdWithRelations(@Param("shopId") Long shopId, Pageable pageable);
+            "WHERE p.shop.id = :shopId AND p.status = :status",
+            countQuery = "SELECT COUNT(p) FROM product p WHERE p.shop.id = :shopId AND p.status = :status")
+    Page<Product> findByShopIdAndStatusWithRelations(
+            @Param("shopId") Long shopId,
+            @Param("status") Integer status,
+            Pageable pageable);
+
     @Query(value = "SELECT p FROM product p " +
             "JOIN FETCH p.shop s " +
             "JOIN FETCH p.category c " +
@@ -64,21 +68,23 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("name") String name,
             @Param("status") Integer status,
             Pageable pageable);
-    @Query("SELECT p FROM product p " +
+    @Query(value = "SELECT p FROM product p " +
             "LEFT JOIN FETCH p.shop s " +  // 只Fetch店铺（核心关联）
             "LEFT JOIN FETCH p.category c " + // 只Fetch分类（核心关联）
-            "WHERE c.parentId = :parentCategoryId")
+            "WHERE c.parentId = :parentCategoryId AND p.status = 2",  // 新增状态为2的条件
+            countQuery = "SELECT COUNT(p) FROM product p " +          // 分页总数查询同步加状态条件
+                    "LEFT JOIN p.category c " +
+                    "WHERE c.parentId = :parentCategoryId AND p.status = 2")
     Page<Product> findByCategoryParentIdWithRelations(
             @Param("parentCategoryId") Integer parentCategoryId,
-            Pageable pageable
-    );
+            Pageable pageable);
     @Query("SELECT p FROM product p " +
             "JOIN FETCH p.shop s " +          // 强制加载店铺
             "JOIN FETCH p.category c " +      // 强制加载分类
             "LEFT JOIN FETCH p.images i " +   // 左连接加载商品图片（允许无图片）
             "WHERE s.status = 1 " +           // 过滤有效店铺
             "ORDER BY p.sales DESC")
-    List<Product> findTop4ByOrderBySalesDesc();
+    List<Product> findTop4ByStatusOrderBySalesDesc(Integer status);
 
     // 同理，最新4个商品的查询方法也要加JOIN FETCH：
     @Query("SELECT p FROM product p " +
@@ -87,5 +93,5 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             "LEFT JOIN FETCH p.images i " +
             "WHERE s.status = 1 " +
             "ORDER BY p.createTime DESC")
-    List<Product> findTop4ByOrderByCreateTimeDesc();
+    List<Product> findTop4ByStatusOrderByCreateTimeDesc(Integer status);
 }
